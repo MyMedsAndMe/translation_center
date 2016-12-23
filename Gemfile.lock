@@ -223,3 +223,6 @@ DEPENDENCIES
   sprockets-rails
   sqlite3
   translation_center!
+
+BUNDLED WITH
+   1.12.5

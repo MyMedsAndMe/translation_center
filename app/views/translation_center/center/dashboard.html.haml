@@ -31,7 +31,6 @@
         %th
           = t('.untranslated')
 
-
     %tbody
       - @langs.each do |lang|
         %tr
@@ -67,10 +66,9 @@
       = t('.search')
     %button.btn#search_reset{ type: :button }
       = t('.reset')
-    
+
   #activity
     = render 'activity', translations_changes: @translations_changes
-
 
 :javascript
   $('.manage-button').click(function(){
@@ -94,9 +92,3 @@
         $('#search_activity').click();
     }
   });
-
-      
-
-
-  
-  

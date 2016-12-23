@@ -1,5 +1,4 @@
 module TranslationCenter
-
   # needed for interpolated translations in I18n
   def self.get_translation_from_hash(key, hash)
     path = key.split('.')
@@ -25,12 +24,12 @@ module TranslationCenter
   end
 
   # gets the translation of a a key in certian lang and inserts it in the db
-  # returns true if the translation was fonud in yaml 
+  # returns true if the translation was fonud in yaml
   def self.yaml2db_key(locale, translation_key, translator, all_yamls)
     I18n.locale = locale
     translation = TranslationCenter::Translation.find_or_initialize_by(translation_key_id: translation_key.id, lang: locale.to_s, translator_id: translator.id)
     translation.translator_type = TranslationCenter::CONFIG['translator_type']
-    
+
     # get the translation for this key from the yamls
     value = get_translation_from_hash(translation_key.name, all_yamls[locale])
 
@@ -79,7 +78,6 @@ module TranslationCenter
 
   # take the yaml translations and update the db with them
   def self.yaml2db(locale=nil)
-
     # prepare translator by creating the translator if he doesn't exist
     translator = TranslationCenter.prepare_translator
 
@@ -95,8 +93,12 @@ module TranslationCenter
     puts "#{I18n.available_locales.size} #{I18n.available_locales.size == 1 ? 'locale' : 'locales'} available: #{I18n.available_locales.join(', ')}"
 
     # Get all keys from all locales
-    all_yamls = I18n.backend.send(:translations)
+    all_yamls = Hash(I18n.backend.send(:translations)).each_with_object({}) do |(lang, translations), memo|
+      memo[lang] = translations.fetch(:customer, {})
+    end
+
     all_keys = all_yamls.collect do |check_locale, translations|
+      # collect_keys([], translations.fetch(:customer, {})).sort
       collect_keys([], translations).sort
     end.flatten.uniq
     puts "#{all_keys.size} #{all_keys.size == 1 ? 'unique key' : 'unique keys'} found."
@@ -117,16 +119,16 @@ module TranslationCenter
       puts "Started exporting translations in #{locale}"
       TranslationCenter::TranslationKey.translated(locale).each do |key|
         begin
-          key.add_to_hash(result, locale)  
+          key.add_to_hash(result, locale)
         rescue
           puts "Error writing key: #{key.name} to yaml for #{locale}"
         end
       end
-      File.open("config/locales/#{locale.to_s}.yml", 'w') do |file|
-        file.write({locale.to_s => result}.ya2yaml)
+
+      File.open("config/locales/customer.#{locale.to_s}.yml", 'w') do |file|
+        file.write({ locale.to_s => { "customer" => result } }.ya2yaml)
       end
       puts "Done exporting translations of #{locale} to #{locale.to_s}.yml"
-    end 
+    end
   end
-
 end
